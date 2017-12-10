@@ -55,6 +55,71 @@ const getValue = (location) => {
 	return distance;
 };
 
+const sumOfAdjacent = (location,spiral) => {
+	if(getValue(location)===1){
+		return 1;
+	}
+	let showLogs = false ? true : false;
+	showLogs && console.log(getValue(location));
+	let {square, side, position } = location;
+	let innerSquare = square - 1;
+	let maxPosition = square*2 - 1;
+	let maxInnerPosition = innerSquare*2 - 1;
+	showLogs && console.log(square,side,position);
+
+	let total = 0;
+	if(position === 0 && side === 0){
+		//if both side and position are zero, there will be no adj
+		total += 0
+		showLogs && console.log("line 73",total);
+	}else if (position === 0 && side !== 0){
+		//if position is zero(but not side), we go back to the last item in the previous side
+		total += spiral[square][side-1][maxPosition];
+		showLogs && console.log("line 78",total);
+		//in fact, if position is zero, I want the PREVIOUS two
+		total += spiral[square][side-1][maxPosition-1];
+		showLogs && console.log("line 80",total);		
+	} else {
+		//if position is not zero, I want the previous item on the same side
+		total += spiral[square][side][position-1];
+		showLogs && console.log(spiral[square][side][position-1])
+		showLogs && console.log("line 84",total);
+	}
+	showLogs && console.log(spiral);
+	if(innerSquare===0){
+		total += 1;
+	}else{	
+		if(side === 3 && position > maxInnerPosition){
+			//if I am rolling over to the next square
+			total += spiral[square][0][0]
+		}
+		total += spiral[innerSquare][side][position] ? spiral[innerSquare][side][position]:0;
+		showLogs && console.log("line 92",total)
+		if(position===0 && side ===0){
+			total += spiral[innerSquare][3][maxInnerPosition];	
+			showLogs && console.log("line 95",total)
+		} else if(position === 0 && side!== 0){
+			total += spiral[innerSquare][side-1][maxInnerPosition];	
+			showLogs && console.log("line 98",total)
+		} else if(position!==0){
+			total += spiral[innerSquare][side][position-1]?spiral[innerSquare][side][position-1]:0;
+			showLogs && console.log("line 101",total)
+			//if position was not 0, get the PREVIOUS two
+			if(side===0 && position===1){
+				total += spiral[innerSquare][3][maxInnerPosition];
+			} else if(position===1 && side!==0){
+				total += spiral[innerSquare][side-1][maxInnerPosition];
+			} else{
+				total+= spiral[innerSquare][side][position-2];
+			}
+			showLogs && console.log("line 104",total)
+		}
+	}
+	return total;
+
+}
+
+
 // console.log(getPostion(7))
 let spiralMem = [];
 for(let i = 1; i < 100 ;i++){
@@ -69,3 +134,29 @@ for(let i = 1; i < 100 ;i++){
 }
 console.log(spiralMem);
 
+let sumSpiral = [
+	[
+		[1]
+	],
+	[
+		[1,2],
+		[4,5],
+		[10,11],
+		[23,25]
+	]
+];
+for(let i = 10; i < 100 ;i++){
+	let {square,side,position} = getPostion(i);
+	if(!sumSpiral[square]){
+		sumSpiral[square] = [];
+	}
+	if(!sumSpiral[square][side]){
+		sumSpiral[square][side] = [];
+	}
+
+	sumSpiral[square][side][position] = sumOfAdjacent({square,side,position},sumSpiral);
+	if(sumSpiral[square][side][position] > 361527){
+		break;
+	}
+}
+console.log(sumSpiral);
