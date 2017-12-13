@@ -1,4 +1,4 @@
-const getPostion = (value) => {
+const getPosition = (value) => {
 	if(value === 1){
 		return {
 			square: 0,
@@ -120,10 +120,10 @@ const sumOfAdjacent = (location,spiral) => {
 }
 
 
-// console.log(getPostion(7))
+// console.log(getPosition(7))
 let spiralMem = [];
 for(let i = 1; i < 100 ;i++){
-	let {square,side,position} = getPostion(i);
+	let {square,side,position} = getPosition(i);
 	if(!spiralMem[square]){
 		spiralMem[square] = [];
 	}
@@ -146,7 +146,7 @@ let sumSpiral = [
 	]
 ];
 for(let i = 10; i < 100 ;i++){
-	let {square,side,position} = getPostion(i);
+	let {square,side,position} = getPosition(i);
 	if(!sumSpiral[square]){
 		sumSpiral[square] = [];
 	}
