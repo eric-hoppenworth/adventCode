@@ -1,5 +1,4 @@
 const fs = require("fs");
-//(n-1 *2)
 
 const runThrough = (list,delay=0)=>{
 	let result = []
@@ -13,7 +12,6 @@ const runThrough = (list,delay=0)=>{
 		}
 		result.push(scanner);
 	}
-	// console.log(result);
 	return {totalSeverity,result};
 }
 

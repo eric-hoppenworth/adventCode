@@ -46,29 +46,13 @@ const compactHash = (sparse) =>{
 	dense.push(temp);
 	return dense;
 }
-
-
-fs.readFile("./puzzle.txt","utf8",function(err,data){
-	const lengths = data.split(",").map((item)=>parseInt(item));
-	// console.log(lengths);
-	//create circle
-	let circle = [];
-	for(var i = 0;i<256;i++){
-		circle[i]=i;
-	}
-	( {circle} = runCommands(lengths,circle) );
-
-	console.log("Solution 1: ",circle[0]*circle[1])
-
-	//part II
+const generateHash = (data)=>{
 	const asciiLengths = [];
 	for (let i = 0; i <data.length; i++){
 		asciiLengths.push(data.charCodeAt(i));
 	}
 	let ending = [17, 31, 73, 47, 23]
 	asciiLengths.push(...ending);
-
-	
 	circle = [];
 	for(var i = 0;i<256;i++){
 		circle[i]=i;
@@ -83,13 +67,40 @@ fs.readFile("./puzzle.txt","utf8",function(err,data){
 	//this is the sparse hash, now I need to create the dense hash.
 	let denseHash = compactHash(circle);
 	// let a = 16;
-	// console.log(circle[0+a]^circle[1+a]^circle[2+a]^circle[3+a]^circle[4+a]^circle[5+a]^circle[6+a]^circle[7+a]^circle[8+a]^circle[9+a]^circle[10+a]^circle[11+a]^circle[12+a]^circle[13+a]^circle[14+a]^circle[15+a])
-	// console.log(denseHash);
+
 	let hexString = "";
 	for(let i = 0 ; i < denseHash.length; i++){
-		hexString += denseHash[i].toString(16);
-		console.log(denseHash[i].toString(16))
+		let newString  = denseHash[i].toString(16)
+		if(newString.length === 1){
+			newString = "0" + newString;
+		}
+		hexString += newString;
 	}
-	console.log("Solution 2: ",hexString);
+	return hexString;
+}
+
+module.exports = {
+	generateHash
+}
+fs.readFile("./puzzle.txt","utf8",function(err,data){
+	const lengths = data.split(",").map((item)=>parseInt(item));
+	// console.log(lengths);
+	//create circle
+	let circle = [];
+	for(var i = 0;i<256;i++){
+		circle[i]=i;
+	}
+	( {circle} = runCommands(lengths,circle) );
+
+	// console.log("Solution 1: ",circle[0]*circle[1])
+
+	//part II
+	
+
+	var hexString = generateHash(data);
+	// console.log("Solution 2: ",hexString);
 
 });
+
+
+
