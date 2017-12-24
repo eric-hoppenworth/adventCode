@@ -116,4 +116,4 @@ fs.readFile("./puzzle.txt","utf8",function(err,data){
 	program0.otherProgram = program1;
 	program1.otherProgram = program0;
 	program0.run();
-})
+});
