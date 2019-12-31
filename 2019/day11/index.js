@@ -103,7 +103,7 @@ fs.readFile("./puzzle.txt","utf8",function(err,data){
     for (let i = bounds.y.min; i <= bounds.y.max; i++) {
         let row = '';
         for (let j = bounds.x.min; j <= bounds.x.max; j++) {
-            row = row + (robot.hull[i][j] ? 'X' : " ");
+            row = row + (robot.hull[i][j] ? String.fromCharCode(9608) : " ");
         }
         row = row + require('os').EOL;
         printOut = printOut+row;

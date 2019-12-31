@@ -5,6 +5,7 @@ function IntComputer(list, inputs = [], mode = "RECURSIVE") {
     this.position = 0;
     this.relativeBase = 0;
     this.mode = mode;
+    this.lastCommand = null;
     this.codes = {
         '01' : {
             paramCount : 3,
@@ -54,11 +55,16 @@ IntComputer.prototype.interpret = function(opcode) {
     return {
         code : string.substring(3),
         paramModes : string.substring(0,3).split(''), // this array is in 'reverse' order, so that means I can pop
-        ...this.codes[string.substring(3)]
+        params : this.list.slice(this.position + 1, this.position+this.codes[string.substring(3)].paramCount+ 1),
+        ...this.codes[string.substring(3)],
+        rel : this.relativeBase
     };
 }
+IntComputer.prototype.nextCommand = function () {
+    return this.interpret(this.list[this.position] || 0);
+}
 IntComputer.prototype.handleOpcode = function() {
-    const instruction = this.interpret(this.list[this.position] || 0);
+    const instruction = this.nextCommand();
     // do what the code tells us to do
     // console.log(code);
     let value;
@@ -91,16 +97,22 @@ IntComputer.prototype.handleOpcode = function() {
             break;
         case "03":
             // input
+            // console.log(instruction);
+
             paramMode = instruction.paramModes.pop();
             if (paramMode !== "1") {
                 this.list[(this.list[++this.position] || 0) + (paramMode == '2' ? this.relativeBase : 0)] = this.inputs.shift();
+                // console.log(this.list[(this.list[this.position] || 0) + (paramMode == '2' ? this.relativeBase : 0)])
             } else {
                 this.list[++this.position] = this.inputs.shift();
+                // console.log(this.list[this.position]);
             }
             this.position++;
             break;
         case "04":
             // output to console
+            // console.log(instruction);
+
             paramMode = instruction.paramModes.pop();
             let c = this.list[++this.position] || 0
             if (paramMode !== "1") {
@@ -108,6 +120,7 @@ IntComputer.prototype.handleOpcode = function() {
             } else {
                 value = c;
             }
+            // console.log(value);
             this.outputs.push(value);
             this.position++;
             return;
@@ -149,6 +162,7 @@ IntComputer.prototype.handleOpcode = function() {
             console.log(instruction.code);
             return 1;
     }
+    this.lastCommand = instruction.code;
     if (this.mode == "RECURSIVE" ) {
         return this.handleOpcode();
     } else {
