@@ -1,0 +1,23 @@
+{
+  "name": "adventcode",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eric-hoppenworth/adventCode.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/eric-hoppenworth/adventCode/issues"
+  },
+  "homepage": "https://github.com/eric-hoppenworth/adventCode#readme",
+  "dependencies": {
+    "inquirer": "^7.0.1",
+    "inquirer-autosubmit-prompt": "^0.2.0"
+  }
+}

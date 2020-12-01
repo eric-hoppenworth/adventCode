@@ -1,4 +1,4 @@
-function IntComputer(list, inputs = [], mode = "RECURSIVE") {
+function IntComputer(list, inputs = [], mode = "RECURSIVE", breakOnInput = false) {
     this.list = [...list];
     this.inputs = [...inputs];
     this.outputs = [];
@@ -6,6 +6,7 @@ function IntComputer(list, inputs = [], mode = "RECURSIVE") {
     this.relativeBase = 0;
     this.mode = mode;
     this.lastCommand = null;
+    this.breakOnInput = breakOnInput;
     this.codes = {
         '01' : {
             paramCount : 3,
@@ -98,7 +99,11 @@ IntComputer.prototype.handleOpcode = function() {
         case "03":
             // input
             // console.log(instruction);
-
+            if (this.breakOnInput) {
+                if (!this.inputs.length) {
+                    return;
+                }
+            }
             paramMode = instruction.paramModes.pop();
             if (paramMode !== "1") {
                 this.list[(this.list[++this.position] || 0) + (paramMode == '2' ? this.relativeBase : 0)] = this.inputs.shift();
@@ -123,7 +128,9 @@ IntComputer.prototype.handleOpcode = function() {
             // console.log(value);
             this.outputs.push(value);
             this.position++;
-            return;
+            if (!this.breakOnInput) {
+                return;
+            }
             break;
         case "05":
         case "06":
