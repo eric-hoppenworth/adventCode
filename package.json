@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/eric-hoppenworth/adventCode#readme",
   "dependencies": {
-    "inquirer": "^7.0.1",
+    "inquirer": "^7.3.3",
     "inquirer-autosubmit-prompt": "^0.2.0"
   }
 }
