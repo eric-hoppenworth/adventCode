@@ -1,14 +1,8 @@
 const fs = require('fs')
 const validation = {
-    byr : function (value) {
-        return value >= '1920' && value <= '2002'
-    },
-    iyr : function (value) {
-        return value >= '2010' && value <= '2020'
-    },
-    eyr : function (value) {
-        return value >= '2020' && value <= '2030'
-    },
+    byr : value => value >= '1920' && value <= '2002',
+    iyr : value => value >= '2010' && value <= '2020',
+    eyr : value => value >= '2020' && value <= '2030',
     hgt : function (value) {
         const match = value.match(/^([\d]{2,3})(in|cm)$/)
         if (!match) {
@@ -23,15 +17,10 @@ const validation = {
                 return false
         }
     },
-    hcl : function (value) {
-        return !!value.match(/^#[\da-f]{6}$/)
-    },
-    ecl : function (value) {
-        return !!value.match(/^(amb|blu|brn|gry|grn|hzl|oth)$/)
-    },
-    pid : function (value) {
-        return !!value.match(/^[\d]{9}$/)
-    }
+    hcl : value => !!value.match(/^#[\da-f]{6}$/),
+    ecl : value => !!value.match(/^(amb|blu|brn|gry|grn|hzl|oth)$/),
+    pid : value => !!value.match(/^[\d]{9}$/)
+
 }
 fs.readFile('./puzzle.txt', 'utf8', function(err, data) {
     let regex = new RegExp(require('os').EOL,'mgi')
