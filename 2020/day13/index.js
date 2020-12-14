@@ -1,6 +1,6 @@
 const fs = require('fs')
 
-fs.readFile('./test.txt', 'utf8', function(err, data) {
+fs.readFile('./puzzle.txt', 'utf8', function(err, data) {
     data = data
         .split(require('os').EOL)
     // console.log(partOne(data));
@@ -37,18 +37,27 @@ function partTwo(data) {
         let busA = buses.shift()
         let busB = buses.shift()
         let combo = getCycleInfo(busA, busB);
-        console.log(combo);
         buses.unshift(combo)
     }
     return buses
 }
 
 function getCycleInfo(busA, busB) {
-    for (let i = 1; i <= Math.max(busA.slope, busB.slope); i++) {
-        if ((busB.slope*i + busB.intercept - busA.intercept) % busA.slope === 0) {
+    let interceptDifference = busB.intercept - busA.intercept
+    let i = Math.floor((busA.slope-interceptDifference)/busB.slope)
+    while (true) {
+        let remainder = (busB.slope*i + interceptDifference) % busA.slope
+        if (remainder === 0) {
             return {
                 intercept: busB.slope*i + busB.intercept,
                 slope: busB.slope * busA.slope
+            }
+        } else {
+            let increment = Math.floor((busA.slope-remainder)/busB.slope)
+            if (increment === 0) {
+                i++
+            } else {
+                i += increment
             }
         }
     }
