@@ -1,45 +1,40 @@
 const fs = require('fs')
 
-fs.readFile('./puzzle.txt', 'utf8', function(err, data) {
+fs.readFile('./test.txt', 'utf8', function(err, data) {
     data = data
         .split(',')
-    console.log(partOne(data))
-    // console.log(partTwo(data))
+    // console.log(partOne(data))
+    console.log(partTwo(data))
 })
-function playGame(turnLimit) {
+function playGame(data, turnLimit) {
     const game = {}
     let i = 1
     let previousNumber = null
     while(true) {
-        let currentNumber = null
-        if (i <= data.length) {
-            currentNumber = data[i-1]
-            game[currentNumber] = [i]
-        } else {
-            if (game[previousNumber].length === 1) {
-                currentNumber = 0
-            } else {
-                let prev = game[previousNumber]
-                currentNumber = prev[prev.length - 1] - prev[prev.length - 2]
-            }
-            if (!game[currentNumber]) {
-                game[currentNumber] = []
-            }
-
-            game[currentNumber].push(i)
-        }
-        previousNumber = currentNumber
-        if(i === turnLimit) {
+        if(i > turnLimit) {
             return previousNumber
+        }
+        if (i <= data.length) {
+            previousNumber = data[i-1]
+            game[previousNumber] = i
+        } else {
+            if (game[previousNumber] === undefined) {
+                game[previousNumber] = i - 1
+                previousNumber = 0
+            } else {
+                let currentNumber = game[previousNumber]
+                game[previousNumber] = i-1
+                previousNumber = (i-1) - currentNumber
+            }
         }
         i++
     }
 }
 
 function partOne(data) {
-    return playGame(2020)
+    return playGame(data, 2020)
 }
 
 function partTwo(data) {
-    return playGame(30000000)
+    return playGame(data, 30000000)
 }
