@@ -38,15 +38,14 @@ function partTwo(ruleHash, list) {
             let rule31Count = 0
 
             while (rule42.test(item) || rule31.test(item)) {
-                if (rule42.test(item)) {
-                    item = item.replace(rule42, '')
-                    rule42Count++
-                }
                 if (rule31.test(item)) {
                     item = item.replace(rule31, '')
                     rule31Count++
                 }
-
+                if (rule42.test(item)) {
+                    item = item.replace(rule42, '')
+                    rule42Count++
+                }
             }
             if (!item && rule42Count && rule31Count && (rule42Count >= rule31Count + 1)) {
                 return carry + 1
