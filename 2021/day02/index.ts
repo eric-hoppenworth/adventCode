@@ -57,8 +57,8 @@ const getVectorFromCommandPartTwo: VectorTransformer = (command:CommandTuple, cu
   const [name, value] = command
   if (name === FORWARD) {
     return {
-      row: value,
-      col: currentPositon.aim * value,
+      row: currentPositon.aim * value,
+      col: value,
       aim: 0,
     }
   }
