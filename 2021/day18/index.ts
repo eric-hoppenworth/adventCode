@@ -121,6 +121,7 @@ const partTwo = (target: Target): number => {
     }
     let count = 0
     rows.forEach(row => console.log(row))
+    console.log(cols)
     // since columns can have Infinity, I want to loop over my rows instead
     for (const yPoint of rows) {
         // find the number of xPoints that have the "same" step count
@@ -137,3 +138,5 @@ const partTwo = (target: Target): number => {
 }
 // console.log(partOne(parseInput(data)))
 console.log(partTwo(parseInput(data)))
+
+// console.log(getColStepCount(19, { min: 20, max: 30 }))
