@@ -50,8 +50,8 @@ const resolvePath = (tree: Tree, path: string[]): Tree | File => {
   }
   return pointer
 }
-const getDirectorySizes = (tree: Tree): { [key: string]: number } => {
-  const directories: { [key: string]: number } = {}
+const getDirectorySizes = (tree: Tree): number[] => {
+  const directories: number[] = []
   const getDirectorySize = (tree: Tree): number => {
     let total = 0
     for (const [key, value] of Object.entries(tree)) {
@@ -59,19 +59,14 @@ const getDirectorySizes = (tree: Tree): { [key: string]: number } => {
         total += value
       } else {
         const directorySize = getDirectorySize(value)
-        if (!directories[key]) {
-          directories[key] = directorySize
-        } else {
-          console.log('already exists')
-          console.log(key)
-        }
+        directories.push(directorySize)
         total += directorySize
       }
     }
     return total
   }
   const root = getDirectorySize(tree)
-  directories['root'] = root
+  directories.push(root)
   return directories
 }
 
@@ -79,12 +74,9 @@ const getDirectorySizes = (tree: Tree): { [key: string]: number } => {
 
 const partOne = (input: string): number => {
   const tree = parseInput(input)
-  console.log(tree)
   const directories = getDirectorySizes(tree)
-  console.log(directories)
-  console.log(Object.values(directories).length)
   let total = 0
-  for (const value of Object.values(directories)) {
+  for (const value of directories) {
     if (value < 100000) {
       total += value
     }
@@ -92,4 +84,13 @@ const partOne = (input: string): number => {
   return total
 }
 
-console.log(partOne(test))
+const partTwo = (input: string): number => {
+  const tree = parseInput(input)
+  const directories = getDirectorySizes(tree)
+  const unusedSpace = 70000000 - directories[directories.length - 1]
+  const spaceNeeded = 30000000 - unusedSpace
+  return Math.min(...directories.filter(size => size >= spaceNeeded))
+}
+
+// console.log(partOne(data))
+console.log(partTwo(data))
