@@ -23,7 +23,6 @@ const compareList = (left: Signal[], right: Signal[]): number => {
         if (comparison) {
           return comparison
         }
-        // the two numbers have the same value, check the next set
       }
       if (leftType === 'object') {
         const comparison = compareList(left[index] as Signal[], right[index] as Signal[])
