@@ -48,17 +48,17 @@ const parseInput = (input: string): Map => {
   }
 }
 
-const doPathing = (map: Map, elevationCheck: (current: number, next: number) => boolean, defaultValue: number = Infinity): Grid => {
+const doPathing = (map: Map, moveCheck: (current: number, next: number) => boolean, defaultValue: number = Infinity): Grid => {
   const stepGrid: Grid = map.grid.map(_ => _.map(() => 0))
   const queue: Position[] = [map.start]
   while(queue.length) {
     const position = queue.pop() as Position
-    const currentElevation = getGridValue(map.grid, position, defaultValue)
+    const current = getGridValue(map.grid, position, defaultValue)
     const currentStep = getGridValue(stepGrid, position, defaultValue)
     Object.values(directionMap).forEach(direction => {
       const newPosition = addPositions(position, direction)
-      const nextElevation = getGridValue(map.grid, newPosition, defaultValue)
-      if (elevationCheck(currentElevation, nextElevation)) {
+      const next = getGridValue(map.grid, newPosition, defaultValue)
+      if (moveCheck(current, next)) {
         // i can step there, but I only want to if my step count is LOWER than the existing one
         const existingStep = getGridValue(stepGrid, newPosition, defaultValue)
         if (existingStep > currentStep + 1 || existingStep === 0) {
