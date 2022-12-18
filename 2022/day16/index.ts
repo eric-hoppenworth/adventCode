@@ -5,16 +5,16 @@ type Cavern = {
   rate: number;
   name: string;
   leadsTo: string[];
-  valveOpen: boolean;
-  distances: Record<string, number>;
+  distances: DistanceRecord;
 }
-
-type Step = {
-  name: string;
-  action: string; // MOVE or OPEN
-}
-
+type DistanceRecord = Record<string, number>;
 type Cave = Record<string, Cavern>
+type Path = {
+  location: Cavern;
+  remainingNodes: Cavern[];
+  score: number;
+  remainingSteps: number;
+}
 
 const parseInput = (input: string): Cave => {
   const cave: Cave = {}
@@ -29,78 +29,16 @@ const parseInput = (input: string): Cave => {
       rate: parseInt(match[2], 10),
       name,
       leadsTo: match[3].split(', '),
-      valveOpen: false,
       distances: {},
     }
   })
   return cave
 }
 
-const getAllPaths = (cave: Cave, path: Step[]): Step[][] | false => {
-  if (path.length >= 31) {
-    return false
-  }
-  if (path.length >= 5 && !path.find((step: Step) => step.action === 'OPEN')) {
-    return false
-  }
-  const paths: Step[][] = []
-  const myCavern = cave[path[path.length - 1].name]
-  if (!path.find((step: Step) => step.action === 'OPEN' && step.name === myCavern.name) && myCavern.rate) {
-    paths.push(path.concat({ name: myCavern.name, action: 'OPEN' }))
-  }
-  const previousStep = path[path.length - 2]
-  return paths.concat(
-    myCavern.leadsTo
-      .filter((name: string) => previousStep ? previousStep.name !== name : true)
-      .map((name: string) => path.concat({ name, action: 'MOVE' }))
-  )
-}
-const getScore = (cave: Cave, path: Step[]): number => {
-  let score = 0
-  for (const index in path) {
-    const step = path[index]
-    if (step.action === "OPEN") {
-      score += cave[step.name].rate * (30 - parseInt(index, 10))
-    }
-  }
-  return score
-}
-
-const partOneBrute = (input: string): number => {
-  const cave = parseInput(input)
-  let paths: Step[][] = [[{ name: 'AA', action: 'MOVE' }]]
-  let count = 0
-  const finishedPaths: Step[][] = []
-  while(paths.length) {
-    const path = paths.pop()
-    if (!path) {
-      break
-    }
-    if (path.length >= 31) {
-      finishedPaths.push(path)
-    }
-    const newPaths = getAllPaths(cave, path)
-
-    if (newPaths) {
-      paths = paths.concat(newPaths)
-    }
-    count++
-  }
-  console.log(finishedPaths.length)
-  let max = 0
-  for (const path of finishedPaths) {
-    const score = getScore(cave, path)
-    if (score > max) {
-      max = score
-    }
-  }
-  return max
-}
-
 const getDistances = (cave: Cave, start: string) => {
   // pathing algorithm
   // all caverns should start with a zero cost
-  const moveBoard: Record<string, number> = {}
+  const moveBoard: DistanceRecord = {}
   Object.values(cave).forEach((cavern) => moveBoard[cavern.name] = 0)
   const queue = [start]
   while (queue.length) {
@@ -119,6 +57,22 @@ const getDistances = (cave: Cave, start: string) => {
   return moveBoard
 }
 
+const getPaths = (path: Path): Path[] => {
+  return path.remainingNodes.map((cavern): false | Path => {
+    const stepsToOpen = path.location.distances[cavern.name] + 1
+    const remainingSteps = path.remainingSteps - stepsToOpen
+    if (remainingSteps < 0) {
+      return false
+    }
+    return {
+      location: cavern,
+      remainingNodes: path.remainingNodes.filter(a => a !== cavern),
+      score: path.score + (cavern.rate * remainingSteps),
+      remainingSteps,
+    }
+  }).filter(Boolean) as Path[]
+}
+
 const partOne = (input: string): number => {
   const cave = parseInput(input)
   const nodes: Cavern[] = Object.values(cave).filter((cavern) => cavern.rate)
@@ -126,9 +80,26 @@ const partOne = (input: string): number => {
   nodes.forEach(cavern => {
     cavern.distances = getDistances(cave, cavern.name)
   })
-  console.log(cave)
-  return 1
+  // now, starting from AA, I want to move to each node independantly
+  const startPath = {
+    location: cave['AA'],
+    remainingNodes: nodes,
+    score: 0,
+    remainingSteps: 30,
+  }
+  let queue: Path[] = [startPath]
+  const finalPaths: Path[] = []
+  while(queue.length) {
+    const path = queue.pop() as Path
+    const newPaths = getPaths(path)
+    if (!newPaths.length) {
+      finalPaths.push(path)
+    } else {
+      queue = queue.concat(newPaths)
+    }
+  }
+  return Math.max(...finalPaths.map(a => a.score))
 }
 
 
-console.log(partOne(testData))
+console.log(partOne(data))
