@@ -115,5 +115,63 @@ const partOne = (input: string): number => {
   return Math.max(...finalPaths.map(a => a.score))
 }
 
+const partTwo = async (input: string) => {
+  const cave = parseInput(input)
+  const nodes: Cavern[] = Object.values(cave).filter((cavern) => cavern.rate)
+  cave['AA'].distances = getDistances(cave, 'AA')
+  nodes.forEach(cavern => {
+    cavern.distances = getDistances(cave, cavern.name)
+  })
+  // now, starting from AA, I want to move to each node independantly
+  const startPath = {
+    units: [{ name: 'ME', location: cave['AA'], remainingSteps: 26 }, { name: 'ELEPHANT', location: cave['AA'], remainingSteps: 26 }],
+    remainingNodes: nodes,
+    score: 0,
+  }
+  let queue: Path[] = [startPath]
+  const finalPaths: Path[] = []
+  // let paths = getPaths(startPath)
+  // for (let i = 0; i < nodes.length; i++) {
+  //   console.log(paths)
+  //   paths = getPaths(paths[paths.length - 1])
+  // }
+  // console.log(paths)
+  let count = 0
+  while(queue.length && count < 10000) {
+    const path = queue.pop() as Path
+    const newPaths = getPaths(path)
+    if (!newPaths.length) {
+      finalPaths.push(path)
+    } else {
+      // check each new path to see if it needs to be added to the queue
+      // for (const newPath of newPaths) {
+      //   for (const queuedPath of queue) {
+      //     console.log('checking...')
+      //     const newRemaining = newPath.remainingNodes.map(a => a.name).sort().join()
+      //     const queuedRemaining = queuedPath.remainingNodes.map(a => a.name).sort().join()
+      //     console.log(newRemaining)
+      //     console.log(queuedRemaining)
+      //     if (newRemaining === queuedRemaining) {
+      //       console.log('matched!')
+      //     }
+      //     // paths are the same if
+      //       // remainingNodes is equal
+      //       // score is equal (?)
+      //
+      //   }
+      // }
+      queue = queue.concat(newPaths)
+    }
+    count++
+    if (count % 500000 === 0) {
+      console.log(queue.length)
+      console.log(finalPaths.length)
+    }
+  }
+  await Deno.writeTextFile("./real-queue.txt", JSON.stringify(queue, null, 2));
+  return Math.max(...finalPaths.map(a => a.score))
+}
+
 
 console.log(partOne(data))
+// console.log(partTwo(data))
