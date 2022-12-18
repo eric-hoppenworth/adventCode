@@ -9,11 +9,15 @@ type Cavern = {
 }
 type DistanceRecord = Record<string, number>;
 type Cave = Record<string, Cavern>
-type Path = {
+type Unit = {
+  name: string;
   location: Cavern;
+  remainingSteps: number;
+}
+type Path = {
+  units: Unit[];
   remainingNodes: Cavern[];
   score: number;
-  remainingSteps: number;
 }
 
 const parseInput = (input: string): Cave => {
@@ -36,8 +40,6 @@ const parseInput = (input: string): Cave => {
 }
 
 const getDistances = (cave: Cave, start: string) => {
-  // pathing algorithm
-  // all caverns should start with a zero cost
   const moveBoard: DistanceRecord = {}
   Object.values(cave).forEach((cavern) => moveBoard[cavern.name] = 0)
   const queue = [start]
@@ -59,16 +61,29 @@ const getDistances = (cave: Cave, start: string) => {
 
 const getPaths = (path: Path): Path[] => {
   return path.remainingNodes.map((cavern): false | Path => {
-    const stepsToOpen = path.location.distances[cavern.name] + 1
-    const remainingSteps = path.remainingSteps - stepsToOpen
+    // I should move the unit with the large number of steps remaining
+    let unitToMove: Unit = { ...path.units[0] }
+    let maxRemaining = -Infinity
+    path.units.forEach((unit) => {
+      if (unit.remainingSteps > maxRemaining) {
+        maxRemaining = unit.remainingSteps
+        unitToMove = { ...unit }
+      }
+    })
+    if (!unitToMove) {
+      return false
+    }
+    const stepsToOpen = unitToMove.location.distances[cavern.name] + 1
+    const remainingSteps = unitToMove.remainingSteps - stepsToOpen
     if (remainingSteps < 0) {
       return false
     }
+    unitToMove.remainingSteps = remainingSteps
+    unitToMove.location = cavern
     return {
-      location: cavern,
+      units: path.units.map((unit) => unit.name === unitToMove.name ? unitToMove : unit),
       remainingNodes: path.remainingNodes.filter(a => a !== cavern),
       score: path.score + (cavern.rate * remainingSteps),
-      remainingSteps,
     }
   }).filter(Boolean) as Path[]
 }
@@ -82,10 +97,9 @@ const partOne = (input: string): number => {
   })
   // now, starting from AA, I want to move to each node independantly
   const startPath = {
-    location: cave['AA'],
+    units: [{ name: 'ME', location: cave['AA'], remainingSteps: 30 }],
     remainingNodes: nodes,
     score: 0,
-    remainingSteps: 30,
   }
   let queue: Path[] = [startPath]
   const finalPaths: Path[] = []
