@@ -113,10 +113,10 @@ const printCave = (cave: Cave) => console.log(cave.map(r => r.join('')).join('\n
 const partOne = (input: string): number => {
   const shapes = parseInput(input)
   const caveDetail = getCave(shapes)
-  printCave(caveDetail.cave)
+  // printCave(caveDetail.cave)
   let count = 0
   while(produceSand(caveDetail)) {
-    printCave(caveDetail.cave)
+    // printCave(caveDetail.cave)
     count++
   }
   return count
@@ -132,7 +132,7 @@ const partTwo = (input: string): number => {
     // printCave(caveDetail.cave)
     count++
   }
-  printCave(caveDetail.cave)
+  // printCave(caveDetail.cave)
   return count
 }
 // console.log(partOne(data))
