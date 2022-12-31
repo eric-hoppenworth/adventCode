@@ -13,9 +13,15 @@ type Blueprint = {
 type RobotRecipe = {
   [key in ResourceType]: number;
 }
+type BuildCommand = {
+  type: ResourceType;
+  canBuild: boolean;
+  turns: number;
+}
 type Backpack = {
   resources: { [key in ResourceType]: number };
   robots: { [key in ResourceType]: number };
+  elapsedTime: number;
 }
 enum ResourceType {
   Ore = 'ore',
@@ -60,7 +66,7 @@ const parseInput = (input: string): Blueprint[] => {
         [ResourceType.Ore]: Math.max(matches[1], matches[2], matches[3], matches[5]),
         [ResourceType.Clay]: matches[4],
         [ResourceType.Obsidian]: matches[6],
-        [ResourceType.Geode]: 0,
+        [ResourceType.Geode]: Infinity,
       },
     }
   })
@@ -94,8 +100,57 @@ const reduceResources = (backpack: Backpack, recipe: RobotRecipe) => {
     backpack.resources[costType as ResourceType] -= cost
   }
 }
+const getPossibleGeodeCount = (backpack: Backpack, maxTime: number): number => {
+  // TODO this stupidly assumes that the current backpack has NO geodes :face-palm:
+  // return Infinity
+  const m = maxTime - backpack.elapsedTime
+  const k = backpack.resources[ResourceType.Geode]
+  const n = backpack.robots[ResourceType.Geode]
+  return k + ((n + m - 1) * (n + m) - (n - 1) * (n)) / 2
+}
 
-const getBlueprintScore = (blueprint: Blueprint) => {
+// supopse I have 3 robots and 5 geodes already
+// I have idk, 5 minutes remaining. (and can build a geode robot every turn)
+// I can have a max of (5) + 3(because I produce before I create) + 4 + 5 + 6 + 7
+
+const getNextRobots = (backpack: Backpack, blueprint: Blueprint): BuildCommand[] => {
+  // for each of the robot types in the blueprint, figure out how many turns I would need to wait to create it.
+  // if I have zero [type] robots, don't consider [robots that need type] robots.
+  return Object.entries(blueprint.robots).map(([key, recipe]) => {
+    // I don't need any more robots of this type
+    if (backpack.robots[key as ResourceType] >= blueprint.maxResources[key as ResourceType]) {
+      return {
+        type: key as ResourceType,
+        canBuild: false,
+        turns: 1,
+      }
+    }
+    // check how many turns it will take to build the robot
+    const turnCounts: number[] = [0]
+    for (const resource of Object.keys(recipe) as ResourceType[]) {
+      if (recipe[resource] === 0) {
+        continue
+      }
+      if (backpack.robots[resource] === 0) {
+        return {
+          type: key as ResourceType,
+          canBuild: false,
+          turns: 1,
+        }
+      }
+
+      turnCounts.push(Math.ceil((recipe[resource] - backpack.resources[resource]) / backpack.robots[resource]))
+    }
+    return {
+      type: key as ResourceType,
+      canBuild: true,
+      turns: Math.max(...turnCounts),
+    }
+  })
+}
+
+const getBlueprintScore = (blueprint: Blueprint, maxTime: number) => {
+  console.log(`starting ${blueprint.index}`)
   let backpacks: Backpack[] = [{
     resources: {
       [ResourceType.Ore]: 0,
@@ -109,79 +164,62 @@ const getBlueprintScore = (blueprint: Blueprint) => {
       [ResourceType.Obsidian]: 0,
       [ResourceType.Geode]: 0,
     },
+    elapsedTime: 0,
   }]
-  for (let minute = 1; minute <= 24; minute++) {
-    // TODO: remove some branches by assuming we can build a geode robot
-    let maxGeode = 0
-    backpacks.forEach((backpack) => {
-      if (backpack.resources[ResourceType.Geode] > maxGeode) {
-        maxGeode = backpack.resources[ResourceType.Geode]
-      }
-    })
-    console.log(`minute ${minute}`)
-    console.log(backpacks.length)
-    const remainingMinutes = 24 - minute
-    const newPacks: Backpack[] = []
-    backpacks.forEach((copyBackpack) => {
-      if (copyBackpack.resources[ResourceType.Geode] + remainingMinutes < maxGeode) {
-        // kill this branch
-        console.log('branch killed')
-        return;
-      }
-      let craftables: (ResourceType | undefined)[] = getPossibleCrafts(copyBackpack, blueprint)
-      // console.log(craftables)
-      // console.log(copyBackpack)
-      // console.log(blueprint)
-      craftables.push(undefined)
-      if (craftables.includes(ResourceType.Geode)) {
-        craftables = [ResourceType.Geode]
-      }
-      craftables.forEach((craftedRobot) => {
-        const backpack = JSON.parse(JSON.stringify(copyBackpack)) as Backpack
-        if (craftedRobot) {
-          reduceResources(backpack, blueprint.robots[craftedRobot])
-        }
-        // console.log('collected')
-        collectResources(backpack)
-        if (craftedRobot) {
-          backpack.robots[craftedRobot] += 1
-        }
-        newPacks.push(backpack)
-      })
-    })
-    // backpacks = newPacks
-    let maxGeode2 = 0
-    backpacks.forEach((backpack) => {
-      if (backpack.robots[ResourceType.Geode] > maxGeode2) {
-        maxGeode2 = backpack.robots[ResourceType.Geode]
-      }
-    })
-    backpacks = newPacks.filter((backpack) => backpack.robots[ResourceType.Geode] >= maxGeode2 - 1)
-    if (maxGeode2 === 0) {
-      let maxObsidian = 0
-      backpacks.forEach((backpack) => {
-        if (backpack.robots[ResourceType.Obsidian] > maxObsidian) {
-          maxObsidian = backpack.robots[ResourceType.Obsidian]
-        }
-      })
-      backpacks = backpacks.filter((backpack) => backpack.robots[ResourceType.Obsidian] >= maxObsidian - 2)
+  let maxFinalGeodes = 0
+  while (backpacks.length) {
+    const backpack = backpacks.pop()
+    if (!backpack) {
+      continue
     }
-    // TODO: I can further prune the backpacks by keeping only packs with the MOST resources, when bot counts are otherwise equal
-    // this actually seems harder to calculate than I think it is
+    if (backpack.elapsedTime >= maxTime) {
+      if (backpack.resources[ResourceType.Geode] > maxFinalGeodes) {
+        maxFinalGeodes = backpack.resources[ResourceType.Geode]
+      }
+      continue
+    }
+    const maxPossibleGeodes = getPossibleGeodeCount(backpack, maxTime)
+    if (maxPossibleGeodes < maxFinalGeodes) {
+      continue
+    }
+
+    const buildCommands: BuildCommand[] = getNextRobots(backpack, blueprint)
+    buildCommands.forEach((command) => {
+      if (!command.canBuild) {
+        return
+      }
+      const copyBackpack = JSON.parse(JSON.stringify(backpack)) as Backpack
+      // wait for the specific number of turns
+      let count = 0
+      for (let i = 1; i <= command.turns && copyBackpack.elapsedTime <= maxTime - 1; i++) {
+        copyBackpack.elapsedTime += 1
+        count++
+        collectResources(copyBackpack)
+      }
+      if (copyBackpack.elapsedTime === maxTime) {
+        backpacks.push(copyBackpack)
+        return
+      }
+      // build my robot
+      reduceResources(copyBackpack, blueprint.robots[command.type])
+      copyBackpack.elapsedTime += 1
+      collectResources(copyBackpack)
+      copyBackpack.robots[command.type] += 1
+      backpacks.push(copyBackpack)
+    })
   }
-  let max = 0
-  backpacks.forEach((backpack) => {
-    if (backpack.resources[ResourceType.Geode] > max) {
-      max = backpack.resources[ResourceType.Geode]
-    }
-  })
-  console.log(`value = ${max * blueprint.index} index = ${blueprint.index}`)
-  return max * blueprint.index
+  return maxFinalGeodes
 }
 
 const partOne = (input: string): number => {
   const blueprints = parseInput(input)
-  return blueprints.reduce((carry, blueprint) => carry + getBlueprintScore(blueprint), 0)
+  return blueprints.reduce((carry, blueprint) => carry + getBlueprintScore(blueprint, 24) * blueprint.index, 0)
 }
 
-console.log(partOne(testData))
+const partTwo = (input: string): number => {
+  const blueprints = parseInput(input).slice(0, 3)
+  return blueprints.reduce((carry, blueprint) => carry * getBlueprintScore(blueprint, 32), 1)
+}
+
+// console.log(partOne(data))
+console.log(partTwo(data))
