@@ -41,24 +41,35 @@ const getHandType = (cards: number[], useJokers: boolean): number => {
     }
     cardCounts[card]++
   }
-  const jokerCount = cardCounts['J'] || 0
+  const jokerCount: number = useJokers && cardCounts[0] || 0
+  if (useJokers) {
+      delete cardCounts[0]
+  }
   const counts = Object.values(cardCounts)
-  if (counts.includes(5)) {
+  if (counts.filter((a) => a + jokerCount >= 5).length || jokerCount === 5) {
     return typeMap.FIVE_OF_A_KIND
   }
-  if (counts.includes(4)) {
+  if (counts.filter((a) => a + jokerCount >= 4).length) {
     return typeMap.FOUR_OF_A_KIND
   }
-  if (counts.includes(3)) {
-    if (counts.includes(2)) {
-      return typeMap.FULL_HOUSE
-    }
+  for (let i = 0; i < counts.length - 1; i++) {
+      for (let j = i + 1; j < counts.length; j++) {
+          if (counts[i] + counts[j] + jokerCount >= 5) {
+              return typeMap.FULL_HOUSE
+          }
+      }
+  }
+  if (counts.filter((a) => a + jokerCount >= 3).length) {
     return typeMap.THREE_OF_A_KIND
   }
-  if (counts.includes(2)) {
-    if (counts.filter(a => a === 2).length === 2) {
-      return typeMap.TWO_PAIR
-    }
+  for (let i = 0; i < counts.length - 1; i++) {
+      for (let j = i + 1; j < counts.length; j++) {
+          if (counts[i] + counts[j] + jokerCount >= 4) {
+              return typeMap.TWO_PAIR
+          }
+      }
+  }
+  if (counts.filter((a) => a + jokerCount >= 2).length) {
     return typeMap.ONE_PAIR
   }
   return typeMap.HIGH_CARD
@@ -79,6 +90,7 @@ const sortHands = (hands: Hand[]): void => {
 }
 const scoreHands = (hands: Hand[]): number => {
   sortHands(hands)
+  console.log(hands)
   return hands.reduce((carry: number, hand: Hand, index: number): number => {
     return carry + (index + 1) * hand.bid
   }, 0)
@@ -91,5 +103,5 @@ const partTwo = (input: string): number => {
   return scoreHands(parseInput(input, true))
 }
 
-// console.log(partOne(data))
-console.log(partTwo(testData))
+// console.log(partOne(testData))
+console.log(partTwo(data))
